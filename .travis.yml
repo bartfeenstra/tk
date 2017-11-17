@@ -1,0 +1,11 @@
+language: python
+
+python:
+    - "3.5"
+
+install:
+    - ./bin/build-dev
+
+script:
+    - ./bin/test
+    - coveralls

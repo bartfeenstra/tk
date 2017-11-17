@@ -1,0 +1,6 @@
+[run]
+source =
+    tk
+
+omit =
+    */test*.py

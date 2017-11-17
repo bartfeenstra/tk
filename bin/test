@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+(
+    cd `dirname "$0"`/..
+    flake8 --ignore=E501 ./tk
+    coverage run -m nose2 &&
+    coverage report -m
+)

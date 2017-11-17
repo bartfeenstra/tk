@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+(
+    cd `dirname "$0"`/..
+    autopep8 --in-place -r ./tk
+)
+

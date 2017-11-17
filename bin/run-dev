@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+(
+    cd `dirname "$0"`/.. &&
+    FLASK_APP=./tk/flask/entry_point.py python -m flask run
+)
+
+
