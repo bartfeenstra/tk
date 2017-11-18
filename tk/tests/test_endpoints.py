@@ -21,21 +21,21 @@ def provide_disallowed_retrieve_methods():
 
 class SubmitTest(IntegrationTestCase):
     @data_provider(provide_disallowed_submit_methods)
-    def testSubmitWithDisallowedMethodShould405(self, method):
+    def testWithDisallowedMethodShould405(self, method):
         response = self._flask_app_client.open('/submit', method=method)
         self.assertEquals(405, response.status_code)
 
-    def testSubmitWithUnsupportedMediaTypeShould415(self):
+    def testWithUnsupportedMediaTypeShould415(self):
         response = self._flask_app_client.post('/submit')
         self.assertEquals(415, response.status_code)
 
-    def testSubmitWithNotAcceptableShould406(self):
+    def testWithNotAcceptableShould406(self):
         response = self._flask_app_client.post('/submit', headers={
             'Content-Type': 'application/octet-stream'
         })
         self.assertEquals(406, response.status_code)
 
-    def testSubmit(self):
+    def testSuccess(self):
         response = self._flask_app_client.post('/submit', headers={
             'Accept': 'text/plain',
             'Content-Type': 'application/octet-stream'
@@ -48,27 +48,27 @@ class SubmitTest(IntegrationTestCase):
 
 class RetrieveTest(IntegrationTestCase):
     @data_provider(provide_disallowed_retrieve_methods)
-    def testRetrieveWithDisallowedMethodShould405(self, method):
+    def testWithDisallowedMethodShould405(self, method):
         response = self._flask_app_client.open('/retrieve/foo', method=method)
         self.assertEquals(response.status_code, 405)
 
-    def testRetrieveWithUnsupportedMediaTypeShould415(self):
+    def testWithUnsupportedMediaTypeShould415(self):
         response = self._flask_app_client.get('/retrieve/foo', headers={
             'Content-Type': 'text/plain',
         })
         self.assertEquals(response.status_code, 415)
 
-    def testRetrieveWithNotAcceptableShould406(self):
+    def testWithNotAcceptableShould406(self):
         response = self._flask_app_client.get('/retrieve/foo')
         self.assertEquals(response.status_code, 406)
 
-    def testRetrieveWithUnknownProcessIdShould404(self):
+    def testWithUnknownProcessIdShould404(self):
         response = self._flask_app_client.get('/retrieve/foo', headers={
             'Accept': 'text/xml',
         })
         self.assertEquals(response.status_code, 404)
 
-    def testRetrieveWithUnprocessedDocument(self):
+    def testSuccessWithUnprocessedDocument(self):
         process_id = self._flask_app.process.submit()
         response = self._flask_app_client.get('/retrieve/%s' % process_id, headers={
             'Accept': 'text/xml',
@@ -76,7 +76,7 @@ class RetrieveTest(IntegrationTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.get_data(as_text=True), 'PROGRESS')
 
-    def testRetrieveWithProcessedDocument(self):
+    def testSuccessWithProcessedDocument(self):
         process_id = self._flask_app.process.submit()
         response = self._flask_app_client.get('/retrieve/%s' % process_id, headers={
             'Accept': 'text/xml',
