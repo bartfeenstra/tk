@@ -2,7 +2,7 @@
 
 (
     cd `dirname "$0"`/.. &&
-    FLASK_APP=./tk/flask/entry_point.py python -m flask run
+    FLASK_APP=./tk/flask/entry_point.py TK_CONFIG_FILE=`readlink -f ./config.py` python -m flask run
 )
 
 
