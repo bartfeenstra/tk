@@ -4,6 +4,7 @@ python:
     - "3.5"
 
 install:
+    - cp src/default_config.py config.py
     - ./bin/build-dev
 
 script:
