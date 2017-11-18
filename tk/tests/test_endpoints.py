@@ -1,5 +1,3 @@
-import uuid
-
 import requests_mock
 
 from tk.tests import IntegrationTestCase, data_provider
