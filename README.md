@@ -6,6 +6,9 @@
 Substitute `http://127.0.0.1:5000` for the actual application URL, if
 you are not using `./bin/run-dev`.
 
+### Requirements
+Python 3.5+.
+
 ### Installation
 Copy `./tk/default_config.py` to `./config.py`, and override any of the
 default configuration as necessary.
@@ -24,7 +27,7 @@ where `{uuid}` is the process UUID returned by `POST /submit`.
 If you do not wish to install dependencies globally, a Virtual
 Environment can be created first:
 ```
-virtualenv -p `which python3.5` venv
+virtualenv -p `which python3.6` venv
 . ./venv/bin/activate
 ```
 To build the code , run `./bin/build-dev`.
