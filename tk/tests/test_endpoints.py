@@ -1,3 +1,5 @@
+from time import sleep
+
 import requests_mock
 
 from tk.tests import IntegrationTestCase, data_provider
@@ -16,6 +18,15 @@ PROFILE = """
     </Address>
 </Profile>
 """
+
+
+def delayed_profile(*_):
+    """
+    Returns a document profile after a delay.
+    :return: The profile.
+    """
+    sleep(5)
+    return PROFILE
 
 
 def provide_disallowed_submit_methods():
@@ -69,7 +80,7 @@ class SubmitTest(IntegrationTestCase):
 
     @requests_mock.mock()
     def testSuccess(self, m):
-        m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
+        m.post(self._flask_app.config['SOURCEBOX_URL'], text=delayed_profile)
         response = self._flask_app_client.post('/submit', headers={
             'Accept': 'text/plain',
             'Content-Type': 'application/octet-stream'
@@ -104,13 +115,29 @@ class RetrieveTest(IntegrationTestCase):
         self.assertEquals(response.status_code, 404)
 
     @requests_mock.mock()
-    def testSuccessWithProcessedDocument(self, m):
+    def testSuccessWithUnprocessedDocument(self, m):
         m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
         submit_response = self._flask_app_client.post('/submit', headers={
             'Accept': 'text/plain',
             'Content-Type': 'application/octet-stream'
         }, data=b'I am an excellent CV, mind you.')
         process_id = submit_response.get_data(as_text=True)
+        response = self._flask_app_client.get('/retrieve/%s' % process_id,
+                                              headers={
+                                                  'Accept': 'text/xml',
+                                              })
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.get_data(as_text=True), 'PROGRESS')
+
+    @requests_mock.mock()
+    def testSuccessWithProcessedDocument(self, m):
+        m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
+        submit_response = self._flask_app_client.post('/submit', headers={
+            'Accept': 'text/plain',
+            'Content-Type': 'application/octet-stream'
+        }, data=b'I am an excellent CV too, mind you.')
+        process_id = submit_response.get_data(as_text=True)
+        sleep(5)
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
                                                   'Accept': 'text/xml',
