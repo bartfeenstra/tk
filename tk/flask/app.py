@@ -1,5 +1,6 @@
 from flask import Flask, request, Response
-from werkzeug.exceptions import NotAcceptable, UnsupportedMediaType, NotFound
+from werkzeug.exceptions import NotAcceptable, UnsupportedMediaType, NotFound, \
+    BadRequest
 
 from tk.process import Process
 
@@ -38,22 +39,28 @@ def response_content_type(content_type):
 class App(Flask):
     def __init__(self, *args, **kwargs):
         super().__init__('tk', static_folder=None, *args, **kwargs)
+        self.config.from_object('tk.default_config')
+        self.config.from_envvar('TK_CONFIG_FILE')
         self._register_routes()
-        self.process = Process()
+        self._process = Process(self.config['SOURCEBOX_URL'], self.config['SOURCEBOX_ACCOUNT_NAME'],
+                                self.config['SOURCEBOX_USER_NAME'], self.config['SOURCEBOX_PASSWORD'])
 
     def _register_routes(self):
         @self.route('/submit', methods=['POST'], endpoint='submit')
         @request_content_type('application/octet-stream')
         @response_content_type('text/plain')
         def submit():
-            process_id = self.process.submit()
+            document = request.get_data()
+            if not document:
+                raise BadRequest()
+            process_id = self._process.submit(document)
             return Response(process_id, 200, mimetype='text/plain')
 
         @self.route('/retrieve/<process_id>', endpoint='retrieve')
         @request_content_type('')
         @response_content_type('text/xml')
         def retrieve(process_id):
-            result = self.process.retrieve(process_id)
+            result = self._process.retrieve(process_id)
             if result is None:
                 raise NotFound()
             return Response(result, 200, mimetype='text/plain')

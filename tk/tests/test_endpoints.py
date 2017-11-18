@@ -1,4 +1,23 @@
+import uuid
+
+import requests_mock
+
 from tk.tests import IntegrationTestCase, data_provider
+
+
+PROFILE = """
+<?xml version="1.0" encoding="UTF-8" ?>
+<Profile>
+  <FirstName>Taalbeheersing</FirstName>
+    <LastName>van de Petra Paula Maria</LastName>
+    <Address>
+        <StreetName>Hoofdstraat</StreetName>
+        <StreetNumberBase>15-A</StreetNumberBase>
+        <PostalCode>6717 AA</PostalCode>
+        <City>EDE</City>
+    </Address>
+</Profile>
+"""
 
 
 def provide_disallowed_submit_methods():
@@ -43,15 +62,25 @@ class SubmitTest(IntegrationTestCase):
         })
         self.assertEquals(406, response.status_code)
 
-    def testSuccess(self):
+    def testWithMissingDocumentShould400(self):
         response = self._flask_app_client.post('/submit', headers={
             'Accept': 'text/plain',
             'Content-Type': 'application/octet-stream'
         })
+        self.assertEquals(400, response.status_code)
+
+    @requests_mock.mock()
+    def testSuccess(self, m):
+        m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
+        response = self._flask_app_client.post('/submit', headers={
+            'Accept': 'text/plain',
+            'Content-Type': 'application/octet-stream'
+        }, data=b'I am an excellent CV, mind you.')
         self.assertEquals(200, response.status_code)
         # Assert the response contains a plain-text process UUID.
         self.assertRegex(response.get_data(
-            as_text=True), '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}')
+            as_text=True),
+            '[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}')
 
 
 class RetrieveTest(IntegrationTestCase):
@@ -76,19 +105,17 @@ class RetrieveTest(IntegrationTestCase):
         })
         self.assertEquals(response.status_code, 404)
 
-    def testSuccessWithUnprocessedDocument(self):
-        process_id = self._flask_app.process.submit()
-        response = self._flask_app_client.get('/retrieve/%s' % process_id, headers={
-            'Accept': 'text/xml',
-        })
+    @requests_mock.mock()
+    def testSuccessWithProcessedDocument(self, m):
+        m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
+        submit_response = self._flask_app_client.post('/submit', headers={
+            'Accept': 'text/plain',
+            'Content-Type': 'application/octet-stream'
+        }, data=b'I am an excellent CV, mind you.')
+        process_id = submit_response.get_data(as_text=True)
+        response = self._flask_app_client.get('/retrieve/%s' % process_id,
+                                              headers={
+                                                  'Accept': 'text/xml',
+                                              })
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.get_data(as_text=True), 'PROGRESS')
-
-    def testSuccessWithProcessedDocument(self):
-        process_id = self._flask_app.process.submit()
-        response = self._flask_app_client.get('/retrieve/%s' % process_id, headers={
-            'Accept': 'text/xml',
-        })
-        self.assertEquals(response.status_code, 200)
-        # @todo Confirm output.
-        self.skipTest()
+        self.assertEquals(response.get_data(as_text=True), PROFILE)

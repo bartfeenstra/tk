@@ -6,10 +6,15 @@
 Substitute `http://127.0.0.1:5000` for the actual application URL, if
 you are not using `./bin/run-dev`.
 
-### Submitting a document
-`curl -X POST --header "Content-Type: application/octet-stream" --header "Accept: text/plain" http://127.0.0.1:5000/submit`
+### Installation
+Copy `./tk/default_config.py` to `./config.py`, and override any of the
+default configuration as necessary.
 
-### Retrieving a document
+### Submitting a document
+`curl -X POST --header "Content-Type: application/octet-stream" --data-binary @{file_path} http://127.0.0.1:5000/submit`
+where `{file_path}` is file path of the document to process.
+
+### Retrieving a document's profile
 `curl -X GET --header "Accept: text/xml" http://127.0.0.1:5000/retrieve/{uuid}`
 where `{uuid}` is the process UUID returned by `POST /submit`.
 
