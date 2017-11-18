@@ -21,7 +21,13 @@ where `{uuid}` is the process UUID returned by `POST /submit`.
 ## Development
 
 ### Building the code
-Run `./bin/build-dev`.
+If you do not wish to install dependencies globally, a Virtual
+Environment can be created first:
+```
+virtualenv -p `which python3.5` venv
+. ./venv/bin/activate
+```
+To build the code , run `./bin/build-dev`.
 
 ### Testing the code
 Run `./bin/test`.
