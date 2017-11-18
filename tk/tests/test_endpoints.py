@@ -2,6 +2,10 @@ from tk.tests import IntegrationTestCase, data_provider
 
 
 def provide_disallowed_submit_methods():
+    """
+    Returns the HTTP methods disallowed by the /submit endpoint.
+    See data_provider().
+    """
     return {
         'GET': ('GET',),
         'PUT': ('PUT',),
@@ -11,6 +15,10 @@ def provide_disallowed_submit_methods():
 
 
 def provide_disallowed_retrieve_methods():
+    """
+    Returns the HTTP methods disallowed by the /retrieve/{} endpoint.
+    See data_provider().
+    """
     return {
         'POST': ('POST',),
         'PUT': ('PUT',),
