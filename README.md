@@ -2,16 +2,18 @@
 
 [![Build Status](https://travis-ci.org/bartfeenstra/tk.svg?branch=master)](https://travis-ci.org/bartfeenstra/tk) [![Coverage Status](https://coveralls.io/repos/github/bartfeenstra/tk/badge.svg?branch=master)](https://coveralls.io/github/bartfeenstra/tk?branch=master)
 
+An asynchronous Sourcebox proxy. 
+
+## Requirements
+Python 3.5+.
+
+## Installation
+Copy `./tk/default_config.py` to `./config.py`, and override any of the
+default configuration as necessary.
+
 ## Usage
 Substitute `http://127.0.0.1:5000` for the actual application URL, if
 you are not using `./bin/run-dev`.
-
-### Requirements
-Python 3.5+.
-
-### Installation
-Copy `./tk/default_config.py` to `./config.py`, and override any of the
-default configuration as necessary.
 
 ### Obtaining an access token
 `curl -X GET --header "Accept: text/plain" --header "Authorization: Basic {credentials}" http://127.0.0.1:5000/accesstoken`
