@@ -13,13 +13,20 @@ default configuration as necessary.
 Substitute `http://127.0.0.1:5000` for the actual application URL, if
 you are not using `./bin/run-dev`.
 
+### Obtaining an access token
+`curl -X GET --header "Accept: text/plain" --header "Authorization: Basic {credentials}" http://127.0.0.1:5000/accesstoken`
+where `{credentials}` are a base64-encoded HTTP Basic Authentication
+user name and password.
+
 ### Submitting a document
-`curl -X POST --header "Content-Type: application/octet-stream" --data-binary @{file_path} http://127.0.0.1:5000/submit`
-where `{file_path}` is file path of the document to process.
+`curl -X POST --header "Content-Type: application/octet-stream" --data-binary @{file_path} http://127.0.0.1:5000/submit?access_token={access_token}`
+where `{file_path}` is file path of the document to process, and
+`{access_token}` is the access token received from `/accesstoken`.
 
 ### Retrieving a document's profile
-`curl -X GET --header "Accept: text/xml" http://127.0.0.1:5000/retrieve/{uuid}`
-where `{uuid}` is the process UUID returned by `POST /submit`.
+`curl -X GET --header "Accept: text/xml" http://127.0.0.1:5000/retrieve/{uuid}?access_token={access_token}`
+where `{uuid}` is the process UUID returned by `POST /submit`, and
+`{access_token}` is the access token received from `/accesstoken`.
 
 ## Development
 
