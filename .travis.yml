@@ -6,7 +6,7 @@ python:
     - "3.7-dev"
 
 install:
-    - cp tk/default_config.py config.py
+    - cp travis-ci/config.py config.py
     - ./bin/build-dev
 
 script:
