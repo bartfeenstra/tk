@@ -251,7 +251,10 @@ class RetrieveTest(IntegrationTestCase):
     def testSuccessWithProcessedDocument(self, m):
         m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
         process_id = self._flask_app.process.submit(b'I am an excellent CV too, mind you.')
-        sleep(6)
+        # Sleep to allow asynchronous processing of the document. This is not
+        #  ideal as it could lead to random test failures, but it is
+        #  unavoidable without additional tools.
+        sleep(9)
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
                                                   'Accept': 'text/xml',
