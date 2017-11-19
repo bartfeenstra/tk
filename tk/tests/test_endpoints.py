@@ -237,13 +237,7 @@ class RetrieveTest(IntegrationTestCase):
     @requests_mock.mock()
     def testSuccessWithUnprocessedDocument(self, m):
         m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
-        submit_response = self._flask_app_client.post('/submit', headers={
-            'Accept': 'text/plain',
-            'Content-Type': 'application/octet-stream'
-        }, data=b'I am an excellent CV, mind you.', query_string={
-            'access_token': self._flask_app.auth.grant_access_token(),
-        })
-        process_id = submit_response.get_data(as_text=True)
+        process_id = self._flask_app.process.submit(b'I am an excellent CV, mind you.')
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
                                                   'Accept': 'text/xml',
@@ -256,13 +250,7 @@ class RetrieveTest(IntegrationTestCase):
     @requests_mock.mock()
     def testSuccessWithProcessedDocument(self, m):
         m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
-        submit_response = self._flask_app_client.post('/submit', headers={
-            'Accept': 'text/plain',
-            'Content-Type': 'application/octet-stream'
-        }, data=b'I am an excellent CV too, mind you.', query_string={
-            'access_token': self._flask_app.auth.grant_access_token(),
-        })
-        process_id = submit_response.get_data(as_text=True)
+        process_id = self._flask_app.process.submit(b'I am an excellent CV too, mind you.')
         sleep(6)
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
