@@ -1,3 +1,5 @@
+from functools import wraps
+
 from flask import Flask, request, Response
 from requests_futures.sessions import FuturesSession
 from werkzeug.exceptions import NotAcceptable, UnsupportedMediaType, NotFound, \
@@ -14,6 +16,7 @@ def request_content_type(content_type):
     """
 
     def decorator(route_method):
+        @wraps(route_method)
         def checker(*route_method_args, **route_method_kwargs):
             if request.mimetype != content_type:
                 raise UnsupportedMediaType()
@@ -31,6 +34,7 @@ def response_content_type(content_type):
     """
 
     def decorator(route_method):
+        @wraps(route_method)
         def checker(*route_method_args, **route_method_kwargs):
             negotiated_content_type = request.accept_mimetypes.best_match(
                 [content_type])
@@ -56,7 +60,7 @@ class App(Flask):
                                 self.config['SOURCEBOX_PASSWORD'])
 
     def _register_routes(self):
-        @self.route('/submit', methods=['POST'], endpoint='submit')
+        @self.route('/submit', methods=['POST'])
         @request_content_type('application/octet-stream')
         @response_content_type('text/plain')
         def submit():
@@ -66,7 +70,7 @@ class App(Flask):
             process_id = self._process.submit(document)
             return Response(process_id, 200, mimetype='text/plain')
 
-        @self.route('/retrieve/<process_id>', endpoint='retrieve')
+        @self.route('/retrieve/<process_id>')
         @request_content_type('')
         @response_content_type('text/xml')
         def retrieve(process_id):

@@ -1,3 +1,4 @@
+from functools import wraps
 from unittest import TestCase
 
 import requests
@@ -25,7 +26,7 @@ def data_provider(data_provider):
         :param test_method: The test method to decorate.
         :return:
         """
-
+        @wraps(test_method)
         def multiplier(self, *test_method_args, **test_method_kwargs):
             """
             The replacement (decorated) test method.
