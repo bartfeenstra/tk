@@ -1,3 +1,5 @@
+from functools import wraps
+
 from flask import Flask, request, Response
 from flask_httpauth import HTTPBasicAuth
 from requests_futures.sessions import FuturesSession
@@ -16,6 +18,7 @@ def request_content_type(content_type):
     """
 
     def decorator(route_method):
+        @wraps(route_method)
         def checker(*route_method_args, **route_method_kwargs):
             if request.mimetype != content_type:
                 raise UnsupportedMediaType()
@@ -33,6 +36,7 @@ def response_content_type(content_type):
     """
 
     def decorator(route_method):
+        @wraps(route_method)
         def checker(*route_method_args, **route_method_kwargs):
             negotiated_content_type = request.accept_mimetypes.best_match(
                 [content_type])
@@ -68,7 +72,7 @@ class App(Flask):
         Check the request contains a valid access token.
         :return:
         """
-
+        @wraps(route_method)
         def checker(*route_method_args, **route_method_kwargs):
             if 'access_token' not in request.args:
                 raise Unauthorized()
@@ -92,14 +96,14 @@ class App(Flask):
                     return password
             return None
 
-        @self.route('/accesstoken', endpoint='access_token')
+        @self.route('/accesstoken')
         @self._http_basic_auth.login_required
         @request_content_type('')
         @response_content_type('text/plain')
         def access_token():
             return self.auth.grant_access_token()
 
-        @self.route('/submit', methods=['POST'], endpoint='submit')
+        @self.route('/submit', methods=['POST'])
         @self.request_access_token
         @request_content_type('application/octet-stream')
         @response_content_type('text/plain')
@@ -110,7 +114,7 @@ class App(Flask):
             process_id = self.process.submit(document)
             return Response(process_id, 200, mimetype='text/plain')
 
-        @self.route('/retrieve/<process_id>', endpoint='retrieve')
+        @self.route('/retrieve/<process_id>')
         @self.request_access_token
         @request_content_type('')
         @response_content_type('text/xml')
