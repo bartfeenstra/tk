@@ -137,7 +137,7 @@ class RetrieveTest(IntegrationTestCase):
             'Content-Type': 'application/octet-stream'
         }, data=b'I am an excellent CV too, mind you.')
         process_id = submit_response.get_data(as_text=True)
-        sleep(5)
+        sleep(6)
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
                                                   'Accept': 'text/xml',
