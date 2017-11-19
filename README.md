@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/bartfeenstra/tk.svg?branch=master)](https://travis-ci.org/bartfeenstra/tk) [![Coverage Status](https://coveralls.io/repos/github/bartfeenstra/tk/badge.svg?branch=master)](https://coveralls.io/github/bartfeenstra/tk?branch=master)
 
+An asynchronous Sourcebox proxy. 
+
 ## Requirements
 Python 3.5+.
 
