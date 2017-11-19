@@ -236,7 +236,7 @@ class RetrieveTest(IntegrationTestCase):
 
     @requests_mock.mock()
     def testSuccessWithUnprocessedDocument(self, m):
-        m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
+        m.post(self._flask_app.config['SOURCEBOX_URL'], text=delayed_profile)
         process_id = self._flask_app.process.submit(b'I am an excellent CV, mind you.')
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
@@ -254,7 +254,7 @@ class RetrieveTest(IntegrationTestCase):
         # Sleep to allow asynchronous processing of the document. This is not
         #  ideal as it could lead to random test failures, but it is
         #  unavoidable without additional tools.
-        sleep(9)
+        sleep(6)
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
                                                   'Accept': 'text/xml',
