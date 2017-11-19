@@ -263,7 +263,7 @@ class RetrieveTest(IntegrationTestCase):
             'access_token': self._flask_app.auth.grant_access_token(),
         })
         process_id = submit_response.get_data(as_text=True)
-        sleep(5)
+        sleep(6)
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
                                                   'Accept': 'text/xml',
