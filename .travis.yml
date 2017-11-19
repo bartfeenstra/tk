@@ -5,6 +5,8 @@ python:
     - "3.6"
     - "3.7-dev"
 
+cache: pip
+
 install:
     - cp tk/default_config.py config.py
     - ./bin/build-dev
