@@ -126,6 +126,17 @@ class App(Flask):
             process = self.process.retrieve(process_id)
             if process is None:
                 raise NotFound()
+
             if request._tk_auth_user_name != process[0]:
                 raise Forbidden()
-            return Response(process[1], 200, mimetype='text/xml')
+
+            if Process.ERROR_INTERNAL == process[1]:
+                status_code = 500
+                content_type = 'text/plain'
+            elif Process.ERROR_UPSTREAM == process[1]:
+                status_code = 502
+                content_type = 'text/plain'
+            else:
+                status_code = 200
+                content_type = 'text/xml'
+            return Response(process[1], status_code, mimetype=content_type)
