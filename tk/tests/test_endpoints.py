@@ -265,12 +265,7 @@ class RetrieveTest(IntegrationTestCase):
         query = {
             'access_token': self._flask_app.auth.grant_access_token(user_name),
         }
-        response = self._flask_app_client.get('/retrieve/%s' % process_id,
-                                              headers={
-                                                  'Accept': 'text/xml',
-                                              }, query_string={
-                                                  'access_token': self._flask_app.auth.grant_access_token(user_name),
-                                              })
+        response = self._flask_app_client.get('/retrieve/%s' % process_id, headers=headers, query_string=query)
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.get_data(as_text=True), PROFILE)
 
