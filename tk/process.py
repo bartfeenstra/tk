@@ -4,6 +4,11 @@ from threading import Thread
 
 
 class Process:
+
+    PROGRESS = 'PROGRESS'
+    ERROR_INTERNAL = 'AN_INTERNAL_ERROR_OCCURRED_AND_WE_ARE_SORRY_FOR_THE_INCONVENIENCE'
+    ERROR_UPSTREAM = 'AN_UPSTREAM_ERROR_OCCURRED_AND_THEIR_SERVER_SAID_THEY_ARE_SORRY'
+
     def __init__(self, session, sourcebox_url, sourcebox_account_name, sourcebox_user_name, sourcebox_password):
         self._processes = {}
         self._process_queue = Queue()
@@ -43,7 +48,13 @@ class Process:
         queue = self._process_queue
 
         def _handler(session, response):
-            queue.put((process_id, response.text))
+            if 400 <= response.status_code < 500:
+                result = self.ERROR_INTERNAL
+            elif 500 <= response.status_code < 600:
+                result = self.ERROR_UPSTREAM
+            else:
+                result = response.text
+            queue.put((process_id, result))
         return _handler
 
     def retrieve(self, process_id):

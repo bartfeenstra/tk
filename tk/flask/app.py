@@ -122,4 +122,13 @@ class App(Flask):
             result = self.process.retrieve(process_id)
             if result is None:
                 raise NotFound()
-            return Response(result, 200, mimetype='text/xml')
+            if Process.ERROR_INTERNAL == result:
+                status_code = 500
+                content_type = 'text/plain'
+            elif Process.ERROR_UPSTREAM == result:
+                status_code = 502
+                content_type = 'text/plain'
+            else:
+                status_code = 200
+                content_type = 'text/xml'
+            return Response(result, status_code, mimetype=content_type)

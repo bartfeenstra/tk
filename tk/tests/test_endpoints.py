@@ -68,6 +68,30 @@ def provide_disallowed_access_token_methods():
     }
 
 
+def provide_4xx_codes():
+    """
+    Returns the HTTP 4xx codes.
+    See data_provider().
+    """
+    codes = list(range(400, 418)) + list(range(421, 424)) + [426, 428, 429, 431, 451]
+    data = {}
+    for code in codes:
+        data[code] = (code,)
+    return data
+
+
+def provide_5xx_codes():
+    """
+    Returns the HTTP 5xx codes.
+    See data_provider().
+    """
+    codes = list(range(500, 508)) + [510, 511]
+    data = {}
+    for code in codes:
+        data[code] = (code,)
+    return data
+
+
 class AccessTokenTest(IntegrationTestCase):
     def setUp(self):
         super().setUp()
@@ -265,6 +289,54 @@ class RetrieveTest(IntegrationTestCase):
                                               headers=headers, query_string=query)
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.get_data(as_text=True), PROFILE)
+
+        # Confirm the results are no longer available, in order to keep memory consumption reasonable.
+        response = self._flask_app_client.get('/retrieve/%s' % process_id,
+                                              headers=headers, query_string=query)
+        self.assertEquals(response.status_code, 404)
+
+    @requests_mock.mock()
+    @data_provider(provide_4xx_codes)
+    def testWithUpstream4xxResponse(self, m, upstream_status_code):
+        m.post(self._flask_app.config['SOURCEBOX_URL'], status_code=upstream_status_code)
+        process_id = self._flask_app.process.submit(b'Something is wrong with me.')
+        # Sleep to allow asynchronous processing of the document. This is not
+        #  ideal as it could lead to random test failures, but it is
+        #  unavoidable without additional tools.
+        sleep(2)
+        headers = {
+            'Accept': 'text/xml',
+        }
+        query = {
+            'access_token': self._flask_app.auth.grant_access_token(),
+        }
+        response = self._flask_app_client.get('/retrieve/%s' % process_id,
+                                              headers=headers, query_string=query)
+        self.assertEquals(response.status_code, 500)
+
+        # Confirm the results are no longer available, in order to keep memory consumption reasonable.
+        response = self._flask_app_client.get('/retrieve/%s' % process_id,
+                                              headers=headers, query_string=query)
+        self.assertEquals(response.status_code, 404)
+
+    @requests_mock.mock()
+    @data_provider(provide_5xx_codes)
+    def testWithUpstream5xxResponse(self, m, upstream_status_code):
+        m.post(self._flask_app.config['SOURCEBOX_URL'], status_code=upstream_status_code)
+        process_id = self._flask_app.process.submit(b'I might just crash you.')
+        # Sleep to allow asynchronous processing of the document. This is not
+        #  ideal as it could lead to random test failures, but it is
+        #  unavoidable without additional tools.
+        sleep(2)
+        headers = {
+            'Accept': 'text/xml',
+        }
+        query = {
+            'access_token': self._flask_app.auth.grant_access_token(),
+        }
+        response = self._flask_app_client.get('/retrieve/%s' % process_id,
+                                              headers=headers, query_string=query)
+        self.assertEquals(response.status_code, 502)
 
         # Confirm the results are no longer available, in order to keep memory consumption reasonable.
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
