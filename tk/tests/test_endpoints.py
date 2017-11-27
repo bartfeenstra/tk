@@ -136,7 +136,7 @@ class SubmitTest(IntegrationTestCase):
 
     def testWithUnsupportedMediaTypeShould415(self):
         response = self._flask_app_client.post('/submit', query_string={
-            'access_token': self._flask_app.auth.grant_access_token(),
+            'access_token': self._flask_app.auth.grant_access_token('User Foo'),
         })
         self.assertEquals(415, response.status_code)
 
@@ -144,7 +144,7 @@ class SubmitTest(IntegrationTestCase):
         response = self._flask_app_client.post('/submit', headers={
             'Content-Type': 'application/octet-stream'
         }, query_string={
-            'access_token': self._flask_app.auth.grant_access_token(),
+            'access_token': self._flask_app.auth.grant_access_token('User Foo'),
         })
         self.assertEquals(406, response.status_code)
 
@@ -153,7 +153,7 @@ class SubmitTest(IntegrationTestCase):
             'Accept': 'text/plain',
             'Content-Type': 'application/octet-stream'
         }, query_string={
-            'access_token': self._flask_app.auth.grant_access_token(),
+            'access_token': self._flask_app.auth.grant_access_token('User Foo'),
         })
         self.assertEquals(400, response.status_code)
 
@@ -180,7 +180,7 @@ class SubmitTest(IntegrationTestCase):
             'Accept': 'text/plain',
             'Content-Type': 'application/octet-stream'
         }, data=b'I am an excellent CV, mind you.', query_string={
-            'access_token': self._flask_app.auth.grant_access_token(),
+            'access_token': self._flask_app.auth.grant_access_token('User Foo'),
         })
         self.assertEquals(200, response.status_code)
         # Assert the response contains a plain-text process UUID.
@@ -199,13 +199,13 @@ class RetrieveTest(IntegrationTestCase):
         response = self._flask_app_client.get('/retrieve/foo', headers={
             'Content-Type': 'text/plain',
         }, query_string={
-            'access_token': self._flask_app.auth.grant_access_token(),
+            'access_token': self._flask_app.auth.grant_access_token('User Foo'),
         })
         self.assertEquals(response.status_code, 415)
 
     def testWithNotAcceptableShould406(self):
         response = self._flask_app_client.get('/retrieve/foo', query_string={
-            'access_token': self._flask_app.auth.grant_access_token(),
+            'access_token': self._flask_app.auth.grant_access_token('User Foo'),
         })
         self.assertEquals(response.status_code, 406)
 
@@ -213,7 +213,7 @@ class RetrieveTest(IntegrationTestCase):
         response = self._flask_app_client.get('/retrieve/foo', headers={
             'Accept': 'text/xml',
         }, query_string={
-            'access_token': self._flask_app.auth.grant_access_token(),
+            'access_token': self._flask_app.auth.grant_access_token('User Foo'),
         })
         self.assertEquals(response.status_code, 404)
 
@@ -236,21 +236,25 @@ class RetrieveTest(IntegrationTestCase):
 
     @requests_mock.mock()
     def testSuccessWithUnprocessedDocument(self, m):
+        user_name = 'User Foo'
         m.post(self._flask_app.config['SOURCEBOX_URL'], text=delayed_profile)
-        process_id = self._flask_app.process.submit(b'I am an excellent CV, mind you.')
+        process_id = self._flask_app.process.submit(
+            user_name, b'I am an excellent CV, mind you.')
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
                                                   'Accept': 'text/xml',
                                               }, query_string={
-                                                  'access_token': self._flask_app.auth.grant_access_token(),
+                                                  'access_token': self._flask_app.auth.grant_access_token(user_name),
                                               })
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.get_data(as_text=True), 'PROGRESS')
 
     @requests_mock.mock()
     def testSuccessWithProcessedDocument(self, m):
+        user_name = 'User Foo'
         m.post(self._flask_app.config['SOURCEBOX_URL'], text=PROFILE)
-        process_id = self._flask_app.process.submit(b'I am an excellent CV too, mind you.')
+        process_id = self._flask_app.process.submit(
+            user_name, b'I am an excellent CV too, mind you.')
         # Sleep to allow asynchronous processing of the document. This is not
         #  ideal as it could lead to random test failures, but it is
         #  unavoidable without additional tools.
@@ -259,7 +263,22 @@ class RetrieveTest(IntegrationTestCase):
                                               headers={
                                                   'Accept': 'text/xml',
                                               }, query_string={
-                                                  'access_token': self._flask_app.auth.grant_access_token(),
+                                                  'access_token': self._flask_app.auth.grant_access_token(user_name),
                                               })
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.get_data(as_text=True), PROFILE)
+
+    @requests_mock.mock()
+    def testSuccessWithSomeoneElsesDocument(self, m):
+        my_user_name = 'User Foo'
+        someone_elses_user_name = 'User Bar'
+        m.post(self._flask_app.config['SOURCEBOX_URL'], text=delayed_profile)
+        process_id = self._flask_app.process.submit(
+            someone_elses_user_name, b'I am an excellent CV, mind you.')
+        response = self._flask_app_client.get('/retrieve/%s' % process_id,
+                                              headers={
+                                                  'Accept': 'text/xml',
+                                              }, query_string={
+                                                  'access_token': self._flask_app.auth.grant_access_token(my_user_name),
+                                              })
+        self.assertEquals(response.status_code, 403)

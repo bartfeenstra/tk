@@ -17,18 +17,31 @@ class Auth:
         self._algorithm = 'HS512'
         self._ttl = ttl
 
-    def grant_access_token(self):
-        return jwt.generate_jwt({}, self._jwt_key, self._algorithm,
+    def grant_access_token(self, user_name):
+        """
+        Grants an access token to the given user.
+        :param user_name: The name of the user to grant the access token to.
+        :return: str
+        """
+        claims = {
+            'user': user_name,
+        }
+        return jwt.generate_jwt(claims, self._jwt_key, self._algorithm,
                                 datetime.timedelta(seconds=self._ttl))
 
     def verify_access_token(self, access_token):
+        """
+        Verifies an access token.
+        :param access_token:
+        :return: The name of the authenticated user.
+        """
         try:
-            jwt.verify_jwt(access_token, self._jwt_key,
-                           [self._algorithm])
+            jwt_header, jwt_claims = jwt.verify_jwt(access_token, self._jwt_key,
+                                                    [self._algorithm])
         # This is an overly broad exception clause, because:
         # 1) the JWT library does not raise exceptions of a single type.
         # 2) calling code will convert this to an appropriate HTTP response.
         except Exception as e:
-            return False
+            return None
 
-        return True
+        return jwt_claims['user']
