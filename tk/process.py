@@ -49,4 +49,6 @@ class Process:
     def retrieve(self, process_id):
         if process_id not in self._processes:
             return None
-        return self._processes[process_id]
+        process = self._processes[process_id]
+        del self._processes[process_id]
+        return process
