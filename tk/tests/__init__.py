@@ -55,6 +55,18 @@ def data_provider(data_provider):
     return decorator
 
 
+def expand_data(values):
+    """
+    Expands a data set.
+    :param data: An iterable of scalars.
+    :return:
+    """
+    data = {}
+    for value in values:
+        data[value] = (value,)
+    return data
+
+
 class IntegrationTestCase(TestCase):
     """
     Provides scaffolding for light-weight integration tests.
