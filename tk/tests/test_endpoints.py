@@ -3,7 +3,7 @@ from time import sleep
 
 import requests_mock
 
-from tk.tests import IntegrationTestCase, data_provider
+from tk.tests import IntegrationTestCase, data_provider, expand_data
 
 PROFILE = """
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -34,12 +34,7 @@ def provide_disallowed_submit_methods():
     Returns the HTTP methods disallowed by the /submit endpoint.
     See data_provider().
     """
-    return {
-        'GET': ('GET',),
-        'PUT': ('PUT',),
-        'PATCH': ('PATCH',),
-        'DELETE': ('DELETE',),
-    }
+    return expand_data(('GET', 'PUT', 'PATCH', 'DELETE'))
 
 
 def provide_disallowed_retrieve_methods():
@@ -47,12 +42,7 @@ def provide_disallowed_retrieve_methods():
     Returns the HTTP methods disallowed by the /retrieve/{} endpoint.
     See data_provider().
     """
-    return {
-        'POST': ('POST',),
-        'PUT': ('PUT',),
-        'PATCH': ('PATCH',),
-        'DELETE': ('DELETE',),
-    }
+    return expand_data(('POST', 'PUT', 'PATCH', 'DELETE'))
 
 
 def provide_disallowed_access_token_methods():
@@ -60,12 +50,7 @@ def provide_disallowed_access_token_methods():
     Returns the HTTP methods disallowed by the /accesstoken/{} endpoint.
     See data_provider().
     """
-    return {
-        'POST': ('POST',),
-        'PUT': ('PUT',),
-        'PATCH': ('PATCH',),
-        'DELETE': ('DELETE',),
-    }
+    return expand_data(('POST', 'PUT', 'PATCH', 'DELETE'))
 
 
 def provide_4xx_codes():
@@ -73,11 +58,7 @@ def provide_4xx_codes():
     Returns the HTTP 4xx codes.
     See data_provider().
     """
-    codes = list(range(400, 418)) + list(range(421, 424)) + [426, 428, 429, 431, 451]
-    data = {}
-    for code in codes:
-        data[code] = (code,)
-    return data
+    return expand_data(list(range(400, 418)) + list(range(421, 424)) + [426, 428, 429, 431, 451])
 
 
 def provide_5xx_codes():
@@ -85,11 +66,7 @@ def provide_5xx_codes():
     Returns the HTTP 5xx codes.
     See data_provider().
     """
-    codes = list(range(500, 508)) + [510, 511]
-    data = {}
-    for code in codes:
-        data[code] = (code,)
-    return data
+    return expand_data(list(range(500, 508)) + [510, 511])
 
 
 class AccessTokenTest(IntegrationTestCase):
