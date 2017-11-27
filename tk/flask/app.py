@@ -77,8 +77,10 @@ class App(Flask):
             if 'access_token' not in request.args:
                 raise Unauthorized()
             access_token = request.args.get('access_token')
-            if not self.auth.verify_access_token(access_token):
+            user_name = self.auth.verify_access_token(access_token)
+            if user_name is None:
                 raise Forbidden()
+            request._tk_auth_user_name = user_name
             return route_method(*route_method_args, **route_method_kwargs)
 
         return checker
@@ -93,6 +95,7 @@ class App(Flask):
             """
             for name, password in self.config['USERS']:
                 if name == actual_name:
+                    request._tk_auth_user_name = name
                     return password
             return None
 
@@ -101,7 +104,7 @@ class App(Flask):
         @request_content_type('')
         @response_content_type('text/plain')
         def access_token():
-            return self.auth.grant_access_token()
+            return self.auth.grant_access_token(request._tk_auth_user_name)
 
         @self.route('/submit', methods=['POST'])
         @self.request_access_token
@@ -111,7 +114,8 @@ class App(Flask):
             document = request.get_data()
             if not document:
                 raise BadRequest()
-            process_id = self.process.submit(document)
+            process_id = self.process.submit(
+                request._tk_auth_user_name, document)
             return Response(process_id, 200, mimetype='text/plain')
 
         @self.route('/retrieve/<process_id>')
@@ -119,16 +123,20 @@ class App(Flask):
         @request_content_type('')
         @response_content_type('text/xml')
         def retrieve(process_id):
-            result = self.process.retrieve(process_id)
-            if result is None:
+            process = self.process.retrieve(process_id)
+            if process is None:
                 raise NotFound()
-            if Process.ERROR_INTERNAL == result:
+
+            if request._tk_auth_user_name != process[0]:
+                raise Forbidden()
+
+            if Process.ERROR_INTERNAL == process[1]:
                 status_code = 500
                 content_type = 'text/plain'
-            elif Process.ERROR_UPSTREAM == result:
+            elif Process.ERROR_UPSTREAM == process[1]:
                 status_code = 502
                 content_type = 'text/plain'
             else:
                 status_code = 200
                 content_type = 'text/xml'
-            return Response(result, status_code, mimetype=content_type)
+            return Response(process[1], status_code, mimetype=content_type)

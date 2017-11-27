@@ -10,6 +10,7 @@ class Process:
     ERROR_UPSTREAM = 'AN_UPSTREAM_ERROR_OCCURRED_AND_THEIR_SERVER_SAID_THEY_ARE_SORRY'
 
     def __init__(self, session, sourcebox_url, sourcebox_account_name, sourcebox_user_name, sourcebox_password):
+        # Values are 2-tuples (user_name: str, result: str).
         self._processes = {}
         self._process_queue = Queue()
         self._session = session
@@ -26,12 +27,13 @@ class Process:
     def _process_queue_worker(self, queue):
         while True:
             process_id, profile = queue.get()
-            self._processes[process_id] = profile
+            self._processes[process_id] = (
+                self._processes[process_id][0], profile)
             queue.task_done()
 
-    def submit(self, document):
+    def submit(self, user_name, document):
         process_id = str(uuid.uuid4())
-        self._processes[process_id] = 'PROGRESS'
+        self._processes[process_id] = (user_name, self.PROGRESS)
         self._session.post(self._sourcebox_url, data={
             'account': self._sourcebox_account_name,
             'username': self._sourcebox_user_name,
@@ -61,5 +63,6 @@ class Process:
         if process_id not in self._processes:
             return None
         process = self._processes[process_id]
-        del self._processes[process_id]
+        if self.PROGRESS != process[1]:
+            del self._processes[process_id]
         return process
