@@ -3,6 +3,6 @@
 (
     cd `dirname "$0"`/..
     flake8 --ignore=E501 ./tk
-    TK_CONFIG_FILE=`readlink -f ./config.py` coverage run -m nose2 &&
+    TK_CONFIG_FILE=`readlink -f ./config.py` coverage run -m nose2 --plugin=nose2.plugins.mp -N 4 &&
     coverage report -m
 )
