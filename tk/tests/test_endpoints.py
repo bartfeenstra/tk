@@ -259,6 +259,12 @@ class RetrieveTest(IntegrationTestCase):
         #  ideal as it could lead to random test failures, but it is
         #  unavoidable without additional tools.
         sleep(6)
+        headers = {
+            'Accept': 'text/xml',
+        }
+        query = {
+            'access_token': self._flask_app.auth.grant_access_token(user_name),
+        }
         response = self._flask_app_client.get('/retrieve/%s' % process_id,
                                               headers={
                                                   'Accept': 'text/xml',
@@ -267,6 +273,10 @@ class RetrieveTest(IntegrationTestCase):
                                               })
         self.assertEquals(response.status_code, 200)
         self.assertEquals(response.get_data(as_text=True), PROFILE)
+
+        # Confirm the results are no longer available, in order to keep memory consumption reasonable.
+        response = self._flask_app_client.get('/retrieve/%s' % process_id, headers=headers, query_string=query)
+        self.assertEquals(response.status_code, 404)
 
     @requests_mock.mock()
     def testSuccessWithSomeoneElsesDocument(self, m):

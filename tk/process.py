@@ -4,6 +4,9 @@ from threading import Thread
 
 
 class Process:
+
+    PROGRESS = 'PROGRESS'
+
     def __init__(self, session, sourcebox_url, sourcebox_account_name, sourcebox_user_name, sourcebox_password):
         # Values are 2-tuples (user_name: str, result: str).
         self._processes = {}
@@ -28,7 +31,7 @@ class Process:
 
     def submit(self, user_name, document):
         process_id = str(uuid.uuid4())
-        self._processes[process_id] = (user_name, 'PROGRESS')
+        self._processes[process_id] = (user_name, self.PROGRESS)
         self._session.post(self._sourcebox_url, data={
             'account': self._sourcebox_account_name,
             'username': self._sourcebox_user_name,
@@ -51,4 +54,7 @@ class Process:
     def retrieve(self, process_id):
         if process_id not in self._processes:
             return None
-        return self._processes[process_id]
+        process = self._processes[process_id]
+        if self.PROGRESS != process[1]:
+            del self._processes[process_id]
+        return process
